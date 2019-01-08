@@ -20,6 +20,15 @@ Lsof stands for LiSt Open Files, and it does just that: it lists
 information about files that are open by the processes running on a
 UNIX system.
 
+%package doc
+Summary:   Documentation for %{name}
+Group:     Documentation
+Requires:  %{name} = %{version}-%{release}
+Obsoletes: %{name}-docs
+
+%description doc
+Man page for %{name}.
+
 %prep
 %setup -q -n %{name}-%{version}/%{name}
 
@@ -35,9 +44,10 @@ install -p -m 0755 lsof ${RPM_BUILD_ROOT}%{_prefix}/sbin
 mkdir -p ${RPM_BUILD_ROOT}%{_mandir}/man8
 install -p -m 0644 lsof.8 ${RPM_BUILD_ROOT}%{_mandir}/man8/
 
-%docs_package
-
 %files
 %defattr(-,root,root,-)
 %{_sbindir}/lsof
 
+%files doc
+%defattr(-,root,root,-)
+%{_mandir}/man8/%{name}.*
