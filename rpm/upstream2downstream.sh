@@ -25,7 +25,7 @@ echo " done."
 
 echo -n "Moving files to downstream directory..."
 mv "$NAME"_src/ "$NAME"-rh
-mv README* 00* "$NAME"-rh
+mv README* 00* RELEASE* "$NAME"-rh
 echo " done."
 
 echo -n "Removing non-Linux dialects..."
