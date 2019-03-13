@@ -31,7 +31,7 @@
 
 
 /*
- * $Id: proto.h,v 1.36 2011/09/07 19:13:49 abe Exp $
+ * $Id: proto.h,v 1.39 2018/02/14 14:20:14 abe Exp $
  */
 
 
@@ -109,6 +109,26 @@ _PROTOTYPE(extern void ent_inaddr,(unsigned char *la, int lp, unsigned char *fa,
 _PROTOTYPE(extern int examine_lproc,(void));
 _PROTOTYPE(extern void Exit,(int xv)) exiting;
 _PROTOTYPE(extern void find_ch_ino,(void));
+
+# if	defined(HASEPTOPTS)
+_PROTOTYPE(extern void clear_pinfo,(void));
+_PROTOTYPE(extern pxinfo_t *find_pepti,(struct lfile *lf, pxinfo_t *pp));
+_PROTOTYPE(extern void process_pinfo,(int f));
+#  if	defined(HASUXSOCKEPT)
+_PROTOTYPE(extern void clear_uxsinfo,(void));
+_PROTOTYPE(extern struct uxsin *find_uxsepti,(struct lfile *lf));
+_PROTOTYPE(extern void process_uxsinfo,(int f));
+#  endif	/* defined(HASUXSOCKEPT) */
+#  if	defined(HASPTYEPT)
+_PROTOTYPE(extern void clear_ptyinfo,(void));
+_PROTOTYPE(extern void enter_ptmxi,(int mn));
+_PROTOTYPE(extern pxinfo_t *find_ptyepti,(struct lfile *lf,int m,pxinfo_t *pp));
+_PROTOTYPE(extern int is_pty_slave,(int sm));
+_PROTOTYPE(extern int is_pty_ptmx,(dev_t dev));
+_PROTOTYPE(extern void process_ptyinfo,(int f));
+#  endif	/* defined(HASPTYEPT) */
+# endif	/* defined(HASEPTOPTS) */
+
 _PROTOTYPE(extern void free_lproc,(struct lproc *lp));
 _PROTOTYPE(extern void gather_proc_info,(void));
 _PROTOTYPE(extern char *gethostnm,(unsigned char *ia, int af));
@@ -129,6 +149,7 @@ _PROTOTYPE(extern int hashbyname,(char *nm, int mod));
 _PROTOTYPE(extern void hashSfile,(void));
 _PROTOTYPE(extern void initialize,(void));
 _PROTOTYPE(extern int is_cmd_excl,(char *cmd, short *pss, short *sf));
+_PROTOTYPE(extern int is_file_sel,(struct lproc *lp, struct lfile *lf));
 _PROTOTYPE(extern int is_nw_addr,(unsigned char *ia, int p, int af));
 
 #if	defined(HASTASKS)
@@ -162,6 +183,7 @@ _PROTOTYPE(extern char *Readlink,(char *arg));
 _PROTOTYPE(extern void readdev,(int skip));
 _PROTOTYPE(extern struct mounts *readmnt,(void));
 _PROTOTYPE(extern void rereaddev,(void));
+_PROTOTYPE(extern char *safepup,(unsigned int c, int *cl));
 _PROTOTYPE(extern int safestrlen,(char *sp, int flags));
 _PROTOTYPE(extern void safestrprtn,(char *sp, int len, FILE *fs, int flags));
 _PROTOTYPE(extern void safestrprt,(char *sp, FILE *fs, int flags));

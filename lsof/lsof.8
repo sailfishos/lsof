@@ -1,12 +1,16 @@
-.ds VN 4.86
+.ds VN 4.91
 .TH LSOF 8 Revision-\*(VN
-.if !\n()P .nr )P 1v
+\" Register )P is used neither by this file nor any groff macro.  However,
+\" some versions of nroff require it.
+.if !\n(.g \{\
+.   if !\n()P .nr )P 1v
+.\}
 .SH NAME
 lsof \- list open files
 .SH SYNOPSIS
 .B lsof
 [
-.B \-?abChKlnNOPRtUvVX
+.B \-?abChlnNOPRtUvVX
 ] [
 .BI -A " A"
 ] [
@@ -20,6 +24,8 @@ lsof \- list open files
 ] [
 .BI +|\-e " s"
 ] [
+.B +|-E
+] [
 .B +|\-f [cfgGn]
 ] [
 .BI \-F " [f]"
@@ -29,6 +35,8 @@ lsof \- list open files
 .BI \-i " [i]"
 ] [
 .BI \-k " k"
+] [
+.BI \-K " k"
 ] [
 .BI +|\-L " [l]"
 ] [
@@ -67,8 +75,7 @@ opened by processes for the following UNIX dialects:
 .PP
 .nf
 	Apple Darwin 9 and Mac OS X 10.[567]
-	FreeBSD 4.9 and 6.4 for x86-based systems
-	FreeBSD 8.2, 9.0 and 10.0 for AMD64-based systems
+	FreeBSD 8.[234], 9.0 and 1[012].0 for AMD64-based systems
 	Linux 2.1.72 and above for x86-based systems
 	Solaris 9, 10 and 11
 .fi
@@ -189,7 +196,7 @@ host aaa.bbb OR ccc.ddd.
 Options may be grouped together following a single prefix -- e.g.,
 the option set ``\fB\-a \-b \-C\fP'' may be stated as
 .BR \-abC .
-However, since values are optional following 
+However, since values are optional following
 .BR +|\-f ,
 .BR \-F ,
 .BR \-g ,
@@ -292,7 +299,7 @@ If
 .I c
 begins and ends with a slash ('/'), the characters between the slashes
 are interpreted as a regular expression.
-Shell meta\-characters in the regular expression must be quoted to prevent 
+Shell meta\-characters in the regular expression must be quoted to prevent
 their interpretation by the shell.
 The closing slash may be followed by these modifiers:
 .IP
@@ -542,7 +549,7 @@ options show the current default prefix \- e.g., ``.lsof''.)
 The suffix,
 .IR hostname ,
 is the first component of the host's name returned by
-.IR gethostname (2) .
+.IR gethostname (2).
 .IP
 When available, the
 .B b
@@ -634,6 +641,67 @@ is added in parentheses to the end of the NAME column.
 (Some device number information might be made available via the
 .BI +|\-m " m"
 option.)
+.TP \w'names'u+4
+.B +|-E
+.B +E
+specifies that Linux pipe, Linux UNIX socket and Linux pseudoterminal files
+should be displayed with endpoint information and the files of the endpoints should also be displayed.
+Note: UNIX socket file endpoint information is only available when the
+compile flags line of
+.B \-v
+output contains HASUXSOCKEPT, and psudoterminal endpoint information is only
+available when the compile flags line contains HASPTYEPT.
+.IP
+Pipe endpoint information is displayed in the NAME column in the
+form ``\fIPID,cmd,FDmode\fP'', where
+.I PID
+is the endpoint process ID;
+.I cmd
+is the endpoint process command;
+.I FD
+is the endpoint file's descriptor; and
+.I mode
+is the endpoint file's access mode.
+.IP
+Pseudoterminal
+endpoint information is displayed in the NAME column as
+``->/dev/pts\fImin\fP\ \fIPID,cmd,FDmode\fP'' or ``\fIPID,cmd,FDmode\fP''.
+The first form is for a master device; the second, for a slave device.
+.I min
+is a slave device's minor device number; and
+.I "PID, cmd, FD"
+and
+.I mode
+are the same as with pipe endpoint information.
+Note: psudoterminal endpoint information is only available when the compile
+flags line of
+.B \-V
+output contains HASPTYEPT.
+.IP
+UNIX socket file endpoint information is displayed in the NAME column
+in the form
+.br
+``type=\fITYPE\fP\ ->INO=\fIINODE\fP\ \fIPID,cmd,FDmode\fP'', where
+.I TYPE
+is the socket type;
+.I INODE
+is the i-node number of the connected socket;
+and
+.I "PID, cmd, FD"
+and
+.I mode
+are the same as with pipe endpoint information.
+Note: UNIX socket file endpoint information is available only when the
+compile flags line of
+.B \-v
+output contains HASUXSOCKEPT.
+.IP
+Multiple occurrences of this information can appear in a file's
+NAME column.
+.IP
+.B -E
+specfies that Linux pipe and Linux UNIX socket files should be displayed
+with endpoint information, but not the files of the endpoints.
 .TP \w'names'u+4
 .B +|\-f [cfgGn]
 .B f
@@ -830,7 +898,12 @@ AND option selection.
 An Internet address is specified in the form (Items in square
 brackets are optional.):
 .IP
+.ie !\n(.g \{
 [\fI46\fP][\fIprotocol\fP][@\fIhostname\fP\||\|\fIhostaddr\fP][:\fIservice\fP\||\|\fIport\fP]
+\}
+.el \{
+.RI [ 46 ][ protocol ][@ hostname \||\| hostaddr ][: service \||\| port ]
+\}
 .IP
 where:
 .nf
@@ -963,26 +1036,43 @@ Here are some sample addresses:
 	:time \- either TCP, UDP or UDPLITE time service port
 .fi
 .TP \w'names'u+4
-.B \-K
-selects the listing of tasks of processes, on dialects
-where task reporting is supported.
+.BI \-K " k"
+selects the listing of tasks (threads) of processes, on dialects
+where task (thread) reporting is supported.
 (If help output \- i.e., the output of the
 .B \-h
 or
 .B \-?
-options \- shows this option, then task reporting is supported by
-the dialect.)
+options \- shows this option, then task (thread) reporting is
+supported by the dialect.)
+.IP
+If
+.B \-K
+is followed by a value,
+.IR k ,
+it must be ``i''.  That causes
+.I lsof
+to ignore tasks, particularly in the default, list\-everything case
+when no other options are specified.
 .IP
 When
 .B \-K
 and
 .B \-a
-are both specified and the tasks of a main process are selected
-by other options, the main process will also be listed as though
-it were a task, but without a task ID.
+are both specified on Linux, and the tasks of a main process are
+selected by other options, the main process will also be listed
+as though it were a task, but without a task ID.
 (See the description of the TID column in the
 .B OUTPUT
 section.)
+.IP
+Where the FreeBSD version supports threads, all threads will be
+listed with their IDs.
+.IP
+In general threads and tasks inherit the files of the caller, but
+may close some and open others, so
+.I lsof
+always reports all the open files of threads and tasks.
 .TP \w'names'u+4
 .BI \-k " k"
 specifies a kernel name list file,
@@ -1079,11 +1169,11 @@ and
 options are available.
 .TP \w'names'u+4
 .B +|\-M
-Enables (\fB+\fP) or disables (\fB-\fP) the
+Enables (\fB+\fP) or disables (\fB\-\fP) the
 reporting of portmapper registrations for local TCP, UDP and UDPLITE ports,
 where port mapping is supported.
 (See the last paragraph of this option description for information about
-where portmapper registration reporting is suported.)
+where portmapper registration reporting is supported.)
 .IP
 The default reporting mode is set by the
 .I lsof
@@ -1093,7 +1183,7 @@ header file;
 is distributed with the HASPMAPENABLED #define deactivated, so
 portmapper reporting is disabled by default and must be requested
 with
-.BR \+M .
+.BR +M .
 Specifying
 .I lsof's
 .B \-h
@@ -1152,7 +1242,7 @@ help output will show the
 option.
 .TP \w'names'u+4
 .B \-n
-inhibits the conversion of network numbers to 
+inhibits the conversion of network numbers to
 host names for network files.
 Inhibiting conversion may make
 .I lsof
@@ -1357,11 +1447,25 @@ to display file size at all times.
 It causes the SIZE/OFF output column title to be changed to SIZE.
 If the file does not have a size, nothing is displayed.
 .IP
-When followed by a protocol name (\fIp\fR), either TCP or UDP,
+The optional
+.BI \-s " p:s"
+form is available only for selected dialects, and only when the
+.B \-h
+or
+.B \-?
+help output lists it.
+.IP
+When the optional form is available, the
+.B s
+may be followed by a protocol name (\fIp\fR), either TCP or UDP,
 a colon (`:') and a comma\-separated protocol state name list,
 the option causes open TCP and UDP files to be excluded if their
 state name(s) are in the list (\fIs\fP) preceded by a `^'; or
 included if their name(s) are not preceded by a `^'.
+.IP
+Dialects that support this option may support only one protocol.
+When an unsupported protocol is specified, a message will be
+displayed indicating state names for the protocol are unavailable.
 .IP
 When an inclusion list is defined, only network files with state
 names in the list will be present in the
@@ -1421,7 +1525,7 @@ displays whatever value \- size or offset \- is appropriate and
 available for the type of file.
 .IP
 Since some types of files don't have true sizes \- sockets, FIFOs,
-pipes, etc. \- lsof displays for their sizes the content amounts in
+pipes, etc.\& \- lsof displays for their sizes the content amounts in
 their associated kernel buffers, if possible.
 .TP \w'names'u+4
 .BI \-S " [t]"
@@ -1526,7 +1630,7 @@ The following seven values may be reported:
 	KEEPALIVE	keep alive time (SO_KEEPALIVE)
 	LINGER	linger time (SO_LINGER)
 	MSS		maximum segment size (TCP_MAXSEG)
-	PQLEN	partial listen queue connections
+	PQLEN		partial listen queue connections
 	QLEN		established listen queue connections
 	QLIM		established listen queue limit
 	RCVBUF	receive buffer length (SO_RCVBUF)
@@ -1542,7 +1646,7 @@ questions in the
 .I lsof
 FAQ (The \fBFAQ\fP section gives its location.)
 .TP \w'names'u+4
-.B \-t 
+.B \-t
 specifies that
 .I lsof
 should produce terse output with process identifiers only and no header \-
@@ -1831,7 +1935,7 @@ Note that
 .I Z
 can be A:B:C or *:B:C or A:B:* or *:*:C to match against the A:B:C context.
 .TP \w'names'u+4
-.B --
+.B \-\-
 The double minus sign option is a marker that signals the end of
 the keyed options.
 It may be used, for example, when the first file name begins with
@@ -1847,7 +1951,7 @@ The first name may be separated from the preceding options with
 the ``--'' option.
 .IP
 If a
-.I name 
+.I name
 is the mounted\-on directory of a file system or the device of the
 file system,
 .I lsof
@@ -1883,7 +1987,7 @@ options.
 .IP
 If a
 .I name
-is the base name of a family of multiplexed files \- e. g, AIX's
+is the base name of a family of multiplexed files \- e.g, AIX's
 .IR /dev/pt[cs] " \-"
 .I lsof
 will list all the associated multiplexed files on the device that
@@ -2256,16 +2360,26 @@ PID
 is the Process IDentification number of the process.
 .TP
 TID
-is the task IDentification number, if a task reporting is supported
-by the dialect and a task is being listed.
+is the task (thread) IDentification number, if task (thread)
+reporting is supported by the dialect and a task (thread) is
+being listed.
 (If help output \- i.e., the output of the
 .B \-h
 or
 .B \-?
-options \- shows this option, then task reporting is supported by
-the dialect.)
+options \- shows this option, then task (thread) reporting is
+supported by the dialect.)
 .IP
-A blank TID column indicates a process \- i.e., a non\-task.
+A blank TID column in Linux indicates a process \- i.e., a non\-task.
+.TP
+TASKCMD
+is the task command name.
+Generally this will be the same as the process named in the COMMAND
+column, but some task implementations (e.g., Linux) permit a task to
+change its command name.
+.IP
+The TASKCMD column width is subject to the same size limitation as the
+COMMAND column.
 .TP
 ZONE
 is the Solaris 10 and higher zone name.
@@ -2382,8 +2496,7 @@ the type of lock applied to the file:
 	\fBx\fP for an SCO OpenServer Xenix lock on part
 	of the file;
 .br
-	\fBX\fP for an SCO OpenServer Xenix lock on the
-	entire file;
+	\fBX\fP for an SCO OpenServer Xenix lock on the entire file;
 .br
 	space if there is no lock.
 .IP
@@ -2541,7 +2654,7 @@ file;
 .IP
 or ``PLWX'' for a
 .I /proc/xregs
-file'
+file;
 .IP
 or ``PMAP'' for a
 .I /proc
@@ -2604,6 +2717,10 @@ status file;
 or ``PSXSEM'' for a POSIX semaphore file;
 .IP
 or ``PSXSHM'' for a POSIX shared memory file;
+.IP
+or ``PTS'' for a
+.I /dev/pts
+file;
 .IP
 or ``PUSG'' for a
 .I /proc/usage
@@ -2872,7 +2989,7 @@ is the node number of a local file;
 .IP
 or the inode number of an NFS file in the server host;
 .IP
-or the Internet protocol type \- e. g, ``TCP'';
+or the Internet protocol type \- e.g, ``TCP'';
 .IP
 or ``STR'' for a stream;
 .IP
@@ -2983,7 +3100,9 @@ when available, followed by ``->'' and the remote path name or kernel
 socket address in hexadecimal when available;
 .IP
 or the association value, association index, endpoint value, local address,
-local port, remote address and remote port for Linux SCTP sockets.
+local port, remote address and remote port for Linux SCTP sockets;
+.IP
+or ``protocol: '' followed by the Linux socket's protocol attribute.
 .PP
 For dialects that support a ``namefs'' file system, allowing one
 file to be attached to another with
@@ -3067,8 +3186,8 @@ process IDentifier (PID)).
 It extends to the beginning of the next PID field or the beginning
 of the first file set of the process, whichever comes first.
 Included in the process set are fields that identify the command,
-the process group IDentification (PGID) number, the task number and
-the user ID (UID) number or login name.
+the process group IDentification (PGID) number, the task (thread)
+ID (TID), and the user ID (UID) number or login name.
 .PP
 A file set begins with a field whose identifier is `f' (for
 file descriptor).
@@ -3123,9 +3242,9 @@ The single character listed first is the field identifier.
 	c	process command name (all characters from proc or
 		user structure)
 	C	file structure share count
-	d	file's device character code 
+	d	file's device character code
 	D	file's major/minor device number (0x<hexadecimal>)
-	f	file descriptor
+	f	file descriptor (always selected)
 	F	file structure address (0x<hexadecimal>)
 	G	file flaGs (0x<hexadecimal>; names if \fB+fg\fP follows)
 	g	process group ID
@@ -3135,6 +3254,7 @@ The single character listed first is the field identifier.
 	l	file's lock status
 	L	process login name
 	m	marker between repeated output
+	M	the task comMand name
 	n	file name, comment, Internet address
 	N	node identifier (ox<hexadecimal>
 	o	file's offset (decimal)
@@ -3690,9 +3810,9 @@ and be allowed to surrender setgid permission.
 	AIX 5.[12] and 5.3-ML1
 	Apple Darwin 7.x Power Macintosh systems
 	FreeBSD 4.x, 4.1x, 5.x and [6789].x for x86-based systems
-	FreeBSD 5.x and [6789].x for Alpha, AMD64 and Sparc64-based
-	    systems
-	HP\-UX 11.00 
+	FreeBSD 5.x, [6789].x and 1[012].8for Alpha, AMD64 and Sparc64
+	    based systems
+	HP\-UX 11.00
 	NetBSD 1.[456], 2.x and 3.x for Alpha, x86, and SPARC-based
 	    systems
 	NEXTSTEP 3.[13] for NEXTSTEP architectures
@@ -3948,7 +4068,7 @@ be used to add a component of the personal device cache file path.
 The LSOFPERSDCPATH variable contents are inserted in the path at the
 place marked by the local system administrator with the ``%p''
 conversion in the HASPERSDC format specification of the dialect's
-.I machine.h 
+.I machine.h
 header file.
 (It's placed right after the home directory in the default
 .I lsof
@@ -4204,7 +4324,7 @@ For example, the major and minor device numbers that the
 and
 .IR stat (2)
 functions report for the directory on which CD-ROM files are mounted
-(typically 
+(typically
 .IR /cdrom )
 are not the same as the ones that it reports for the device on which
 CD-ROM files are mounted (typically
@@ -4313,10 +4433,10 @@ device cache file
 (The suffix,
 .IR hostname ,
 is the first component of the host's name returned by
-.IR gethostname (2) .)
+.IR gethostname (2).)
 .SH AUTHORS
 .I Lsof
-was written by Victor A. Abell <abe@purdue.edu> of Purdue University.
+was written by Victor A.\&Abell <abe@purdue.edu> of Purdue University.
 Many others have contributed to
 .IR lsof .
 They're listed in the

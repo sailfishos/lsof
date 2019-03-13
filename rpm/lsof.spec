@@ -1,6 +1,6 @@
 Summary: A utility which lists open files on a Linux/UNIX system
 Name: lsof
-Version: 4.86
+Version: 4.91
 Release: 1
 License: zlib
 Group: Development/Debuggers
