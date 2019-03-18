@@ -32,7 +32,7 @@
 #ifndef	lint
 static char copyright[] =
 "@(#) Copyright 1997 Purdue Research Foundation.\nAll rights reserved.\n";
-static char *rcsid = "$Id: dmnt.c,v 1.19 2012/04/10 16:39:50 abe Exp $";
+static char *rcsid = "$Id: dmnt.c,v 1.21 2018/02/14 14:26:38 abe Exp $";
 #endif
 
 
@@ -378,7 +378,7 @@ getmntdev(dn, dnl, s, ss)
 	h = hash_mnt(dn);
 	for (mp = MSHash[h]; mp; mp = mp->next) {
 	    if ((dnl == mp->dnl) && !strcmp(dn, mp->dn)) {
-		memset((void *)s, 0, sizeof(struct stat));
+		zeromem((char *)s, sizeof(struct stat));
 		s->st_dev = mp->dev;
 		*ss |= SB_DEV;
 		return(1);
@@ -535,6 +535,8 @@ readmnt()
 		if ((nfs = strcasecmp(fp[2], "nfs3")))
 		    nfs = strcasecmp(fp[2], "nfs4");
 	    }
+	    if (!nfs && !HasNFS)
+		HasNFS = 1;
 	    if (mp) {
 
 	    /*

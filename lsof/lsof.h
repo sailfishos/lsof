@@ -31,7 +31,7 @@
 
 
 /*
- * $Id: lsof.h,v 1.65 2011/09/07 19:13:49 abe Exp $
+ * $Id: lsof.h,v 1.70 2018/03/26 21:50:45 abe Exp $
  */
 
 
@@ -78,6 +78,32 @@ struct l_dev {
 	int v;				/* has been verified
 					 * (when DCUnsafe == 1) */
 };
+
+
+# if	defined(HASEPTOPTS)
+/*
+ * End point definitions
+ */
+
+#define	CHEND_PIPE	0x01		/* pipe endpoint ID */
+#define	CHEND_PTY	0x02		/* pseudoterminal endpoint ID */
+
+#  if	defined(HASUXSOCKEPT)
+#define	CHEND_UXS	0x04		/* UNIX socket endpoint ID */
+#  endif	/* defined(HASUXSOCKEPT) */
+
+#define	EPT_PIPE	0x01		/* process has pipe file */
+#define	EPT_PIPE_END	0x02		/* process has pipe end point file */
+#define	EPT_PTY		0x04		/* process has a pseudoterminal file */
+#define	EPT_PTY_END	0x08		/* process has a pseudoterminal end
+					 * point file */
+
+#  if	defined(HASUXSOCKEPT)
+#define	EPT_UXS		0x10		/* process has a UNIX socket file */
+#define	EPT_UXS_END	0x20		/* process has a UNIX socket end point
+					 * file */
+#  endif	/* defined(HASUXSOCKEPT) */
+# endif	/* defined(HASEPTOPTS) */
 
 
 /*
@@ -298,58 +324,58 @@ static struct utmp dummy_utmp;		/* to get login name length */
 #define	N_REGLR		0		/* regular file system node */
 #define	N_AFS		1		/* AFS node */
 #define	N_AFPFS		2		/* Apple Darwin AppleShare */
-#define	N_AUSX		3		/* Auspex LFS node */
-#define	N_AUTO		4		/* automount node */
-#define	N_BLK		5		/* block device node */
-#define	N_CACHE		6		/* cached file system node */
-#define	N_CDFS		7		/* CD-ROM node */
-#define	N_CFS		8		/* CFS node */
-#define	N_CHR		9		/* character device node */
-#define	N_COM		10		/* streams common device node */
-#define	N_CTFSADIR	11		/* Solaris CTFS adir node */
-#define	N_CTFSBUND	12		/* Solaris CTFS bundle node */
-#define	N_CTFSCDIR	13		/* Solaris CTFS cdir node */
-#define	N_CTFSCTL	14		/* Solaris CTFS ctl node */
-#define	N_CTFSEVT	15		/* Solaris CTFS events node */
-#define	N_CTFSLATE	16		/* Solaris CTFS latest node */
-#define	N_CTFSROOT	17		/* Solaris CTFS root node */
-#define	N_CTFSSTAT	18		/* Solaris CTFS status node */
-#define	N_CTFSSYM	19		/* Solaris CTFS symbolic node */
-#define	N_CTFSTDIR	20		/* Solaris CTFS type node */
-#define	N_CTFSTMPL	21		/* Solaris CTFS template node */
-#define	N_DEV		22		/* DEV FS node */
-#define	N_DOOR		23		/* DOOR node */
-#define	N_FD		24		/* FD node */
-#define	N_FIFO		25		/* FIFO node */
-#define	N_HSFS		26		/* High Sierra node */
-#define	N_KERN		27		/* BSD /kern node */
-#define	N_LOFS		28		/* loopback node */
-#define	N_MNT		29		/* mount file system device node */
-#define	N_MPC		30		/* multiplexed device node */
-#define	N_MVFS		31		/* multi-volume file system node (?) */
-#define	N_NFS		32		/* NFS node */
-#define	N_NFS4		33		/* NFS version 4 node */
-#define	N_NM		34		/* named file system node */
-#define	N_OBJF		35		/* objfs file system node */
-#define	N_PCFS		36		/* PC file system node */
-#define	N_PIPE		37		/* pipe device node */
-#define	N_PORT		38		/* port node */
-#define	N_PROC		39		/* /proc node */
-#define	N_PSEU		49		/* pseudofs node */
-#define	N_SAMFS		41		/* Solaris SAM-FS */
-#define	N_SANFS		42		/* AIX SANFS */
-#define	N_SDEV		43		/* Solaris sdev file system node */
-#define	N_SHARED	44		/* Solaris sharedfs */
-#define	N_SOCK		45		/* sock_vnodeops node */
-#define	N_SPEC		46		/* spec_vnodeops node */
-#define	N_STREAM	47		/* stream node */
-#define	N_TMP		48		/* tmpfs node */
-#define	N_UFS		49		/* UNIX file system node */
-#define	N_UNKN		50		/* unknown node type */
-#define	N_VXFS		51		/* Veritas file system node */
-#define	N_XFS		52		/* XFS node */
-#define	N_ZFS		53		/* ZFS node */
-#define N_ANON_INODE	54              /* inode on linux anon_inodefs */
+#define	N_ANON_INODE	3		/* Linux anon_inodefs node */
+#define	N_AUSX		4		/* Auspex LFS node */
+#define	N_AUTO		5		/* automount node */
+#define	N_BLK		6		/* block device node */
+#define	N_CACHE		7		/* cached file system node */
+#define	N_CDFS		8		/* CD-ROM node */
+#define	N_CFS		9		/* CFS node */
+#define	N_CHR		10		/* character device node */
+#define	N_COM		11		/* streams common device node */
+#define	N_CTFSADIR	12		/* Solaris CTFS adir node */
+#define	N_CTFSBUND	13		/* Solaris CTFS bundle node */
+#define	N_CTFSCDIR	14		/* Solaris CTFS cdir node */
+#define	N_CTFSCTL	15		/* Solaris CTFS ctl node */
+#define	N_CTFSEVT	16		/* Solaris CTFS events node */
+#define	N_CTFSLATE	17		/* Solaris CTFS latest node */
+#define	N_CTFSROOT	18		/* Solaris CTFS root node */
+#define	N_CTFSSTAT	19		/* Solaris CTFS status node */
+#define	N_CTFSSYM	20		/* Solaris CTFS symbolic node */
+#define	N_CTFSTDIR	21		/* Solaris CTFS type node */
+#define	N_CTFSTMPL	22		/* Solaris CTFS template node */
+#define	N_DEV		23		/* DEV FS node */
+#define	N_DOOR		24		/* DOOR node */
+#define	N_FD		25		/* FD node */
+#define	N_FIFO		26		/* FIFO node */
+#define	N_HSFS		27		/* High Sierra node */
+#define	N_KERN		28		/* BSD /kern node */
+#define	N_LOFS		29		/* loopback node */
+#define	N_MNT		30		/* mount file system device node */
+#define	N_MPC		31		/* multiplexed device node */
+#define	N_MVFS		32		/* multi-volume file system node (?) */
+#define	N_NFS		33		/* NFS node */
+#define	N_NFS4		34		/* NFS version 4 node */
+#define	N_NM		35		/* named file system node */
+#define	N_OBJF		36		/* objfs file system node */
+#define	N_PCFS		37		/* PC file system node */
+#define	N_PIPE		38		/* pipe device node */
+#define	N_PORT		39		/* port node */
+#define	N_PROC		40		/* /proc node */
+#define	N_PSEU		41		/* pseudofs node */
+#define	N_SAMFS		42		/* Solaris SAM-FS */
+#define	N_SANFS		43		/* AIX SANFS */
+#define	N_SDEV		44		/* Solaris sdev file system node */
+#define	N_SHARED	45		/* Solaris sharedfs */
+#define	N_SOCK		46		/* sock_vnodeops node */
+#define	N_SPEC		47		/* spec_vnodeops node */
+#define	N_STREAM	48		/* stream node */
+#define	N_TMP		49		/* tmpfs node */
+#define	N_UFS		50		/* UNIX file system node */
+#define	N_UNKN		51		/* unknown node type */
+#define	N_VXFS		52		/* Veritas file system node */
+#define	N_XFS		53		/* XFS node */
+#define	N_ZFS		54		/* ZFS node */
 
 # if	!defined(OFFDECDIG)
 #define	OFFDECDIG	8		/* maximum number of digits in the
@@ -364,6 +390,9 @@ static struct utmp dummy_utmp;		/* to get login name length */
 
 #define	RPTTM		15		/* default repeat seconds */
 #define	RTD		" rtd"		/* root directory fd name */
+#define	TASKCMDL	9		/* maximum number of characters from
+					 * command name to print in TASKCMD
+					 * column */
 #define TCPTPI_FLAGS	0x0001		/* report TCP/TPI socket options and
 					 * state, and TCP_NODELAY state */
 #define	TCPTPI_QUEUES	0x0002		/* report TCP/TPI queue lengths */
@@ -437,8 +466,10 @@ extern int PpidColW;
 #define SZTTL		"SIZE"
 #define	SZOFFTTL	"SIZE/OFF"
 extern int SzOffColW;
-#define	TIDTTL		"TID"
-extern	int TidColW;
+#define	TASKCMDTTL	"TASKCMD"
+extern	int TaskCmdColW;
+#define	TASKTIDTTL	"TID"
+extern	int TaskTidColW;
 #define TYPETTL		"TYPE"
 extern int TypeColW;
 #define	USERTTL		"USER"
@@ -470,6 +501,12 @@ extern int ZoneColW;
 #define	SELZONE		0x1000		/* select zone (-z) */
 #define	SELEXCLF	0x2000		/* file selection excluded */
 #define	SELTASK		0x4000		/* select tasks (-K) */
+#define	SELPINFO	0x8000		/* selected for pipe info (cleared in
+					 * link_lfile() */
+#define	SELUXSINFO	0x10000		/* selected for UNIX socket info;
+					 * cleared in link_lfile() */
+#define	SELPTYINFO	0x20000		/* selected for pseudoterminal info;
+					 * cleared in link_lfile() */
 #define	SELALL		(SELCMD|SELCNTX|SELFD|SELNA|SELNET|SELNM|SELNFS|SELPID|SELUID|SELUNX|SELZONE|SELTASK)
 #define	SELPROC		(SELCMD|SELCNTX|SELPGID|SELPID|SELUID|SELZONE|SELTASK)
 					/* process selecters */
@@ -490,6 +527,8 @@ struct afsnode {			/* AFS pseudo-node structure */
 	long nlink;
 };
 # endif	/* defined(HAS_AFS) */
+
+extern int AllProc;
 
 # if	defined(HAS_STD_CLONE)
 struct clone {
@@ -544,6 +583,38 @@ struct pff_tab {			/* print file flags table structure */
 	char *nm;			/* name to print for flag */
 };
 # endif	/* defined(HASFSTRUCT) */
+
+# if	defined(HASEPTOPTS)
+typedef struct pxinfo {			/* hashed pipe, UNIX socket or pseudo-
+					 * terminal inode information */
+	INODETYPE ino;			/* file's inode */
+	struct lfile *lf;		/* connected peer file */
+	int lpx;			/* connected process index */
+	struct pxinfo *next;		/* next entry for hashed inode */
+} pxinfo_t;
+
+typedef struct uxsin {			/* UNIX socket information */
+	INODETYPE inode;		/* node number */
+	char *pcb;			/* protocol control block */
+	char *path;			/* file path */
+	unsigned char sb_def;		/* stat(2) buffer definitions */
+	dev_t sb_dev;			/* stat(2) buffer device */
+	INODETYPE sb_ino;		/* stat(2) buffer node number */
+	dev_t sb_rdev;			/* stat(2) raw device number */
+	uint32_t ty;			/* socket type */
+
+#  if	defined(HASEPTOPTS) && defined(HASUXSOCKEPT)
+	struct uxsin *icons;		/* incoming socket conections */
+	unsigned int icstat;		/* incoming connection status
+					 * 0 == none */
+	pxinfo_t *pxinfo;		/* inode information */
+	struct uxsin *peer;	        /* connected peer(s) info */
+#  endif	/* defined(HASEPTOPTS) && defined(HASUXSOCKEPT) */
+
+	struct uxsin *next;
+} uxsin_t;
+# endif	/* defined(HASEPTOPTS) */
+
 
 struct seluid {
 	uid_t uid;			/* User ID */
@@ -621,6 +692,8 @@ extern int Fnfs;
 extern int Fnlink;
 extern int Foffset;
 extern int Fovhd;
+extern int FeptE;
+
 extern int Fport;
 
 # if	!defined(HASNORPC_H)
@@ -672,8 +745,10 @@ extern struct fieldsel FieldSel[];
 extern int Hdr;
 
 enum IDType {PGID, PID};
+extern int  IgnTasks;
 extern char *InodeFmt_d;
 extern char *InodeFmt_x;
+extern int LastPid;
 
 struct lfile {
 	char access;
@@ -702,6 +777,16 @@ struct lfile {
 
 	unsigned char nlink_def;	/* link count definition status */
 	unsigned char off_def;		/* offset definition status */
+
+# if	defined(HASEPTOPTS)
+	unsigned char chend;		/* communication channel endpoint
+					 * file */
+#  if	defined(HASPTYEPT)
+	int tty_index;			/* pseudoterminal index of slave side
+					 * (if this is the master side) */
+#  endif	/* defined(HASPTYEPT) */
+# endif	/* defined(HASEPTOPTS) */
+
 	unsigned char rdev_def;		/* rdev definition status */
 	unsigned char sz_def;		/* size definition status */
 
@@ -712,7 +797,7 @@ struct lfile {
 	char fd[FDLEN];
 	char iproto[IPROTOL];
 	char type[TYPEL];
-	short sf;			/* select flags -- SEL* symbols */
+	unsigned int sf;		/* select flags -- SEL* symbols */
 	int ch;				/* VMPC channel: -1 = none */
 	int ntype;			/* node type -- N_* value */
 	SZOFFTYPE off;
@@ -837,10 +922,15 @@ struct lproc {
 	short pss;			/* state: 0 = not selected
 				 	 *	  1 = wholly selected
 				 	 *	  2 = partially selected */
+# if	defined(HASEPTOPTS)
+	short ept;			/* end point status -- EPT_* values */
+# endif	/* defined(HASEPTOPTS) */
+
 	int pid;			/* process ID */
 
 # if	defined(HASTASKS)
 	int tid;			/* task ID */
+	char *tcmd;			/* task command name */
 # endif	/* HASTASKS */
 
 	int pgid;			/* process group ID */
@@ -855,6 +945,7 @@ struct lproc {
 };
 extern struct lproc *Lp, *Lproc;
 
+extern int MaxFd;
 extern char *Memory;
 extern int MntSup;
 extern char *MntSupP;
@@ -937,8 +1028,9 @@ extern int Procsrch;
 extern int PrPass;
 extern int RptTm;
 extern struct l_dev **Sdev;
-extern int Selall;
+extern int SelAll;
 extern int Selflags;
+extern int SelProc;
 extern int Setgid;
 extern int Selinet;
 extern int Setuidroot;
@@ -950,7 +1042,9 @@ extern char *SzOffFmt_0t;
 extern char *SzOffFmt_d;
 extern char *SzOffFmt_dv;
 extern char *SzOffFmt_x;
-extern int TaskPrtFl;
+extern int TaskCmdLim;
+extern int TaskPrtCmd;
+extern int TaskPrtTid;
 extern int TcpStAlloc;
 extern unsigned char *TcpStI;
 extern int TcpStIn;

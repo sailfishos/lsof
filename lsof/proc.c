@@ -32,18 +32,15 @@
 #ifndef lint
 static char copyright[] =
 "@(#) Copyright 1994 Purdue Research Foundation.\nAll rights reserved.\n";
-static char *rcsid = "$Id: proc.c,v 1.46 2010/07/29 15:59:28 abe Exp $";
+static char *rcsid = "$Id: proc.c,v 1.50 2018/02/14 14:20:14 abe Exp $";
 #endif
 
 
 #include "lsof.h"
 
-
-/*
- * Local function prototypes
- */
-
-_PROTOTYPE(static int is_file_sel,(struct lproc *lp, struct lfile *lf));
+#if	defined(HASPTYEPT)
+_PROTOTYPE(static void prt_ptyinfo,(pxinfo_t *pp, int prt_edev, int ps));
+#endif	/* defined(HASPTYEPT) */
 
 
 /*
@@ -60,12 +57,12 @@ add_nma(cp, len)
 	if (!cp || !len)
 	    return;
 	if (Lf->nma) {
-	    nl = (int)strlen(Lf->nma);
-	    Lf->nma = (char *)realloc((MALLOC_P *)Lf->nma,
-				      (MALLOC_S)(len + nl + 2));
+	    nl = (int) strlen(Lf->nma);
+	    Lf->nma = (char *) realloc((MALLOC_P *)Lf->nma,
+				       (MALLOC_S)(len + nl + 2));
 	} else {
 	    nl = 0;
-	    Lf->nma = (char *)malloc((MALLOC_S)(len + 1));
+	    Lf->nma = (char *) malloc((MALLOC_S)(len + 1));
 	}
 	if (!Lf->nma) {
 	    (void) fprintf(stderr, "%s: no name addition space: PID %ld, FD %s",
@@ -168,6 +165,10 @@ alloc_lfile(nm, num)
 #if	defined(HASMNTSTAT)
 	Lf->mnt_stat = (unsigned char)0;
 #endif	/* defined(HASMNTSTAT) */
+
+#if	defined(HASEPTOPTS)
+	Lf->chend = 0;
+#endif	/* defined(HASEPTOPTS) */
 
 #if	defined(HASSOOPT)
 	Lf->lts.kai = Lf->lts.ltm = 0;
@@ -303,8 +304,13 @@ alloc_lproc(pid, pgid, ppid, uid, cmd, pss, sf)
 	Lp = &Lproc[Nlproc++];
 	Lp->pid = pid;
 
+#if	defined(HASEPTOPTS)
+	Lp->ept = 0;
+#endif	/* defined(HASEPTOPTS) */
+
 #if	defined(HASTASKS)
 	Lp->tid = 0;
+	Lp->tcmd = (char *)NULL;
 #endif	/* defined(HASTASKS) */
 
 	Lp->pgid = pgid;
@@ -498,7 +504,7 @@ examine_lproc()
  *	o  listing is selected by an ANDed option set (not all options)
  *	   that includes a single PID selection -- this one.
  */
-	if ((Lp->sf & SELPID) && !Selall) {
+	if ((Lp->sf & SELPID) && !AllProc) {
 	    if ((Selflags == SELPID)
 	    ||  (Fand && (Selflags & SELPID))) {
 		sbp = 1;
@@ -564,6 +570,14 @@ free_lproc(lp)
 	    (void) free((FREE_P *)lp->cmd);
 	    lp->cmd = (char *)NULL;
 	}
+
+#if	defined(HASTASKS)
+	if (lp->tcmd) {
+	    (void) free((FREE_P *)lp->tcmd);
+	    lp->tcmd = (char *)NULL;
+	}
+#endif	/* defined(HASTASKS) */
+
 }
 
 
@@ -631,7 +645,7 @@ is_cmd_excl(cmd, pss, sf)
  * is_file_sel() - is file selected?
  */
 
-static int
+int
 is_file_sel(lp, lf)
 	struct lproc *lp;		/* lproc structure pointer */
 	struct lfile *lf;		/* lfile structure pointer */
@@ -648,7 +662,7 @@ is_file_sel(lp, lf)
 	}
 #endif	/* defined(HASSECURITY) && defined(HASNOSOCKSECURITY) */
 
-	if (Selall)
+	if (AllProc)
 	    return(1);
 	if (Fand && ((lf->sf & Selflags) != Selflags))
 	    return(0);
@@ -742,13 +756,13 @@ is_proc_excl(pid, pgid, uid, pss, sf)
  * network selections from the file flags, so that the tests in is_file_sel()
  * work as expected.
  */
-	if (Selall) {
+	if (AllProc) {
 	    *pss = PS_PRI;
 
 #if	defined(HASSECURITY) && defined(HASNOSOCKSECURITY)
-	    *sf = SELALL & ~(SELNA | SELNET);
+	    *sf = SelAll & ~(SELNA | SELNET);
 #else	/* !defined(HASSECURITY) || !defined(HASNOSOCKSECURITY) */
-	    *sf = SELALL;
+	    *sf = SelAll;
 #endif	/* defined(HASSECURITY) && defined(HASNOSOCKSECURITY) */
 
 	    return(0);
@@ -882,7 +896,49 @@ link_lfile()
 {
 	if (Lf->sf & SELEXCLF)
 	    return;
-	Lp->pss |= PS_SEC;
+
+#if	defined(HASEPTOPTS)
+/*
+ * If endpoint info has been requested, clear the SELPINFO flag from the local
+ * pipe file structure, since it was set only to insure this file would be
+ * linked.  While this might leave no file selection flags set, a later call
+ * to the process_pinfo() function might set some.  Also set the EPT_PIPE flag.
+ */
+	if (FeptE) {
+	    if (Lf->sf & SELPINFO) {
+		Lp->ept |= EPT_PIPE;
+		Lf->sf &= ~SELPINFO;
+	    }
+
+# if	defined(HASUXSOCKEPT)
+/*
+ * Process UNIX socket endpoint files the same way by clearing the SELUXINFO
+ * flag and setting the EPT_UXS flag, letting a later call to process_uxsinfo()
+ * set selection flags.
+ */
+	    if (Lf->sf & SELUXSINFO) {
+		Lp->ept |= EPT_UXS;
+		Lf->sf &= ~SELUXSINFO;
+	    }
+# endif	/* defined(HASUXSOCKEPT) */
+
+# if	defined(HASPTYEPT)
+/*
+ * Process pseudoterminal endpoint files the same way by clearing the SELPINFO
+ * flag and setting the EPT_PTY flag, letting a later call to process_ptyinfo()
+ * set selection flags.
+ */
+	    if (Lf->sf & SELPTYINFO) {
+		Lp->ept |= EPT_PTY;
+		Lf->sf &= ~SELPTYINFO;
+	    }
+# endif	/* defined(HASPTYEPT) */
+
+	}
+#endif	/* defined(HASEPTOPTS) */
+
+	if (Lf->sf)
+	    Lp->pss |= PS_SEC;
 	if (Plf)
 	    Plf->next = Lf;
 	else
@@ -896,6 +952,107 @@ link_lfile()
 	    Ftask = 2;
 	Lf = (struct lfile *)NULL;
 }
+
+
+#if	defined(HASEPTOPTS)
+/*
+ * process_pinfo() -- process pipe info, adding it to selected files and
+ *		      selecting pipe end files (if requested)
+ */
+
+void
+process_pinfo(f)
+	int f;				/* function:
+					 *     0 == process selected pipe
+					 *     1 == process end point
+					 */
+{
+	struct lproc *ep;		/* pipe endpoint process */
+	struct lfile *ef;		/* pipe endpoint file */
+	int i;				/* temporary index */
+	char nma[1024];			/* name addition buffer */
+	pxinfo_t *pp;			/* previous pipe info */
+	
+	if (!FeptE)
+	    return;
+	for (Lf = Lp->file; Lf; Lf = Lf->next) {
+	    if ((Lf->ntype != N_FIFO) || (Lf->inp_ty != 1))
+		continue;
+	    pp = (pxinfo_t *)NULL;
+	    switch(f) {
+	    case 0:
+
+	    /*
+	     * Process already selected pipe file.
+	     */
+		if (is_file_sel(Lp, Lf)) {
+
+		/*
+		 * This file has been selected by some criterion other than
+		 * its being a pipe.  Look up the pipe's endpoints.
+		 */
+		    do {
+			if ((pp = find_pepti(Lf, pp))) {
+
+			/*
+			 * This pipe endpoint is linked to the selected pipe
+			 * file.  Add its PID and FD to the name column
+			 * addition.
+			 */
+			    ep = &Lproc[pp->lpx];
+			    ef = pp->lf;
+			    for (i = 0; i < (FDLEN - 1); i++) {
+				if (ef->fd[i] != ' ')
+				    break;
+			    }
+			    (void) snpf(nma, sizeof(nma) - 1, "%d,%.*s,%s%c",
+				ep->pid, CmdLim, ep->cmd,&ef->fd[i],
+				ef->access);
+			    (void) add_nma(nma, strlen(nma));
+			    if (FeptE == 2) {
+
+			    /*
+			     * Endpoint files have been selected, so mark this
+			     * one for selection later. Set the type to PIPE.
+			     */
+				ef->chend = CHEND_PIPE;
+				ep->ept |= EPT_PIPE_END;
+			    }
+			    pp = pp->next;
+			}
+		    } while (pp);
+		}
+		break;
+	    case 1:
+		if (!is_file_sel(Lp, Lf) && (Lf->chend & CHEND_PIPE)) {
+
+		/*
+		 * This is an unselected end point file.  Select it and add
+		 * its end point information to its name column addition.
+		 */
+		    Lf->sf = Selflags;
+		    Lp->pss |= PS_SEC;
+		    do {
+			if ((pp = find_pepti(Lf, pp))) {
+			    ep = &Lproc[pp->lpx];
+			    ef = pp->lf;
+			    for (i = 0; i < (FDLEN - 1); i++) {
+				if (ef->fd[i] != ' ')
+				    break;
+			    }
+			    (void) snpf(nma, sizeof(nma) - 1, "%d,%.*s,%s%c",
+				ep->pid, CmdLim, ep->cmd, &ef->fd[i],
+				ef->access);
+			    (void) add_nma(nma, strlen(nma));
+			    pp = pp->next;
+			}
+		    } while (pp);
+		}
+		break;
+	    }
+	}
+}
+#endif	/* defined(HASEPTOPTS) */
 
 
 #if	defined(HASFSTRUCT)
@@ -989,15 +1146,9 @@ print_proc()
 	if (!Lp->pss)
 	    return(0);
 	if (Fterse) {
-
-#if	defined(HASTASKS)
-	/*
-	 * If this is a task of a process, skip it.
-	 */
-	    if (Lp->tid)
+	    if (Lp->pid == LastPid)		/* eliminate duplicates */
 		return(0);
-#endif	/* defined(HASTASKS) */
-
+	    LastPid = Lp->pid;
 	/*
 	 * The mode is terse and something in the process appears to have
 	 * been selected.  Make sure of that by looking for a selected file,
@@ -1029,6 +1180,8 @@ print_proc()
 #if	defined(HASTASKS)
 	    if (FieldSel[LSOF_FIX_TID].st && Lp->tid)
 		(void) printf("%c%d%c", LSOF_FID_TID, Lp->tid, Terminator);
+	    if (FieldSel[LSOF_FIX_TCMD].st && Lp->tcmd)
+		(void) printf("%c%s%c", LSOF_FID_TCMD, Lp->tcmd, Terminator);
 #endif	/* defined(HASTASKS) */
 
 #if	defined(HASZONES)
@@ -1062,7 +1215,7 @@ print_proc()
 		    (void) printf("%c%s%c", LSOF_FID_LOGIN, cp, Terminator);
 	    }
 	    if (Terminator == '\0')
-	    putchar('\n');
+		putchar('\n');
 	}
 /*
  * Print files.
@@ -1072,25 +1225,29 @@ print_proc()
 		continue;
 	    rv = 1;
 	/*
-	 * If no field output selected, print dialects-specific formatted
+	 * If no field output selected, print dialect-specific formatted
 	 * output.
 	 */
 	    if (!Ffield) {
 		print_file();
 		continue;
 	    }
+	    lc = st = 0;
+	    if (FieldSel[LSOF_FIX_FD].st) {
+
+	    /*
+	     * Skip leading spaces in the file descriptor.  Print the field
+	     * identifier even if there are no characters after leading
+	     * spaces.
+	     */
+		for (cp = Lf->fd; *cp == ' '; cp++)
+		    ;
+		(void) printf("%c%s%c", LSOF_FID_FD, cp, Terminator);
+		lc++;
+	    }
 	/*
 	 * Print selected fields.
 	 */
-	    lc = st = 0;
-	    if (FieldSel[LSOF_FIX_FD].st) {
-		for (cp = Lf->fd; *cp == ' '; cp++)
-		    ;
-		if (*cp) {
-		    (void) printf("%c%s%c", LSOF_FID_FD, cp, Terminator);
-		    lc++;
-		}
-	    }
 	    if (FieldSel[LSOF_FIX_ACCESS].st) {
 		(void) printf("%c%c%c",
 		    LSOF_FID_ACCESS, Lf->access, Terminator);
@@ -1241,3 +1398,131 @@ print_proc()
 	}
 	return(rv);
 }
+
+
+#if	defined(HASPTYEPT)
+/*
+ * process_ptyinfo() -- process pseudoterminal info, adding it to selected files and
+ *		      selecting pseudoterminal end files (if requested)
+ */
+
+void
+process_ptyinfo(f)
+	int f;				/* function:
+					 *  0 == process selected pseudoterminal
+					 *  1 == process end point */
+{
+	pxinfo_t *pp;			/* previous pseudoterminal info */
+	int mos;			/* master or slave indicator
+					 *     0 == slave; 1 == master */
+	int pc;				/* print count */
+
+	if (!FeptE)
+	    return;
+	for (Lf = Lp->file; Lf; Lf = Lf->next) {
+	    if (Lf->rdev_def && is_pty_ptmx(Lf->rdev))
+		mos = 1;
+	    else if (Lf->rdev_def && is_pty_slave(GET_MAJ_DEV(Lf->rdev)))
+		mos = 0;
+	    else
+		continue;
+
+	    pp = (pxinfo_t *)NULL;
+	    switch(f) {
+	    case 0:
+
+	    /*
+	     * Process already selected pseudoterminal file.
+	     */
+		if (is_file_sel(Lp, Lf)) {
+
+		/*
+		 * This file has been selected by some criterion other than
+		 * its being a pseudoterminal.  Look up the pseudoterminal's
+		 * endpoints.
+		 */
+		    pc = 1;
+		    do {
+			if ((pp = find_ptyepti(Lf, !mos, pp))) {
+
+			/*
+			 * This pseudoterminal endpoint is linked to the
+			 * selected pseudoterminal file.  Add its PID, FD and
+			 * access mode to the name column addition.
+			 */
+			    prt_ptyinfo(pp, (mos && pc), (FeptE == 2));
+			    pp = pp->next;
+			    pc = 0;
+			}
+		    } while (pp);
+		}
+		break;
+	    case 1:
+		if (!is_file_sel(Lp, Lf) && (Lf->chend & CHEND_PTY)) {
+
+		/*
+		 * This is an unselected end point file.  Select it and add
+		 * its end point information to its name column addition.
+		 */
+		    Lf->sf = Selflags;
+		    Lp->pss |= PS_SEC;
+		    pc = 1;
+		    do {
+			if ((pp = find_ptyepti(Lf, !mos, pp))) {
+			    prt_ptyinfo(pp, (mos && pc), 0);
+			    pp = pp->next;
+			    pc = 0;
+			}
+		    } while (pp);
+		}
+		break;
+	    }
+	}
+}
+
+
+/*
+ * prt_ptyinfo() -- print pseudoterminal information
+ */
+
+static void
+prt_ptyinfo(pp, prt_edev, ps)
+	pxinfo_t *pp;			/* peer info */
+	int prt_edev;			/* print the end point device file */
+	int ps;				/* processing status:
+					 *    0 == process immediately
+					 *    1 == process later */
+{
+	struct lproc *ep;		/* pseudoterminal endpoint process */
+	struct lfile *ef;		/* pseudoterminal endpoint file */
+	int i;				/* temporary index */
+	char nma[1024];			/* name addition buffer */
+
+	ep = &Lproc[pp->lpx];
+	ef = pp->lf;
+	for (i = 0; i < (FDLEN - 1); i++) {
+	    if (ef->fd[i] != ' ')
+		break;
+	}
+	if (prt_edev) {
+	    (void) snpf(nma, sizeof(nma) - 1, "->/dev/pts/%d %d,%.*s,%s%c",
+			Lf->tty_index,
+			ep->pid, CmdLim, ep->cmd, &ef->fd[i],
+			ef->access);
+	} else {
+	    (void) snpf(nma, sizeof(nma) - 1, "%d,%.*s,%s%c",
+			ep->pid, CmdLim, ep->cmd, &ef->fd[i],
+			ef->access);
+	}
+	(void) add_nma(nma, strlen(nma));
+	if (ps) {
+
+	/*
+	 * Endpoint files have been selected, so mark this
+	 * one for selection later. Set the type to PTY.
+	 */
+	    ef->chend = CHEND_PTY;
+	    ep->ept |= EPT_PTY_END;
+	}
+}
+#endif	/* defined(HASPTYEPT) */

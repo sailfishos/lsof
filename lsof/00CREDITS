@@ -29,6 +29,7 @@ provided test systems where I was able to do development work.
 	Ric Anderson
 	Stuart Anderson
 	Michael Antlitz
+	Cato Auestad
 	Marc Auslander
 	Tigran Aivazian
 	Jos Backus
@@ -82,6 +83,8 @@ provided test systems where I was able to do development work.
 	John Caruso
 	Jon Champlin
 	Kris Chandrasekhar
+	Stephane Chazelas
+	Andrey Chernov
 	Albert Chin-A-Young
 	Bernt Christandl
 	Marc Christensen
@@ -90,6 +93,7 @@ provided test systems where I was able to do development work.
 	Yves Christophe
 	Richard Chycoski
 	A. Channing Clark
+	Jorn Clausen
 	Axel Clauberg
 	John Clear
 	David Clissold
@@ -122,6 +126,7 @@ provided test systems where I was able to do development work.
 	Casper Dik
 	John DiMarco
 	Don Draper
+	Bryan Drewery
 	Michel Dubois
 	Eric Dumazet
 	Dick Dunbar
@@ -162,6 +167,7 @@ provided test systems where I was able to do development work.
 	Brian L. Gentry
 	Dave Gilbert
 	Steve Ginsberg
+	Bjarni Ingi Gislason
 	Edwin Groothuis
 	Jin Guojun
 	Kurt Gollhardt
@@ -175,6 +181,7 @@ provided test systems where I was able to do development work.
 	Chaskiel Grundman
 	Armin Gruner
 	David Gutierrez
+	Mateusz Guzik
 	Robert Hall
 	Garner Halloran
 	Adam Hammer
@@ -191,6 +198,7 @@ provided test systems where I was able to do development work.
 	Janet Hempstead
 	Michael Hennecke
 	Randolph J. Herber
+	Allen Hewes
 	Andrew Hill
 	Kurt Hillig
 	Steven Hinkle
@@ -329,6 +337,7 @@ provided test systems where I was able to do development work.
 	Andrew Merril
 	Richard van Meurs
 	Jim Mewes
+	Conrad Meyer
 	Gary Millen
 	Timothy Miller
 	Davin Milun
@@ -375,6 +384,7 @@ provided test systems where I was able to do development work.
 	Hung Pham
 	Ray Phillips
 	Francois Pinard
+	Gary Plewa
 	Alex Podlecki
 	Lutz Poetschulat,
 	John Polstra
@@ -396,6 +406,7 @@ provided test systems where I was able to do development work.
 	Aaron Rhodes
 	Jim Reid
 	Jean-Luc Richier
+	Clint Roberts
 	Ingimar Robertson
 	Sylvain Robitaille
 	Larry Rogers
@@ -405,6 +416,7 @@ provided test systems where I was able to do development work.
 	Kevin Ruderman
 	Wolfgang Rupprecht
 	Pavol Rusnak
+	Eygene Ryabinkin
 	Conrad J. Sabatier
 	Klaus Saggerer
 	Chris Schanzle
@@ -430,6 +442,7 @@ provided test systems where I was able to do development work.
 	Gerry Singleton
 	Leonard Sitongia
 	Kevin Smallwood
+	Gleb Smirnoff
 	Curt Smith
 	Ben Smithurst
 	Douglas R. Smith
@@ -448,6 +461,7 @@ provided test systems where I was able to do development work.
 	Diana Stockdale
 	Andreas Stolcke
 	Jeff Stoner
+	Kristna Streitov
 	Sushila Subramanian
 	Jan Ole Suhr
 	Mike Sullivan
@@ -469,6 +483,7 @@ provided test systems where I was able to do development work.
 	Michael Townsend
 	Linus Torvalds
 	Mike Tracy
+	Jeff Trawick
 	Dan Trinkle
 	Erik Trulsson
 	Lars Tunkrans
@@ -513,9 +528,10 @@ provided test systems where I was able to do development work.
 	Jan Wortelboer
 	Joshua Wright
 	Sailu Yallapragada
-	Masatake Yamato
+	Masatake YAMATO
 	Donna Yobs
 	Ron Young
+	Warren Young
 	Blair Zajac
 	Karel Zak
 	Donald Zoch
@@ -527,4 +543,4 @@ and I apologize for the error.
 
 
 Vic Abell <abe@purdue.edu>
-April 10, 2012
+February 14, 2018
