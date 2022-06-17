@@ -4,7 +4,7 @@ Version: 4.94
 Release: 1
 License: zlib
 Source0: %{name}-%{version}.tar.bz2
-URL: https://github.com/lsof-org/lsof
+URL: https://github.com/sailfishos/lsof
 
 %description
 Lsof stands for LiSt Open Files, and it does just that: it lists
